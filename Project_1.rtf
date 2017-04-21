@@ -1,0 +1,53 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1504\cocoasubrtf820
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;\red26\green26\blue26;}
+{\*\expandedcolortbl;;\cssrgb\c13333\c13333\c13333;}
+\margl1440\margr1440\vieww24980\viewh9660\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 ssh -l peterkoa flip.engr.oregonstate.edu\
+ssh os-class\
+cd /\
+cd scratch/spring2017\
+mkdir 12-04\
+cd 12-04\
+git clone git://git.yoctoproject.org/linux-yocto-3.14\
+cd linux-yocto-3.14\
+git checkout v3.14.26\
+source /scratch/opt/environment-setup-i586-poky-linux.csh\
+cp /scratch/spring2017/files/config-3.14.26-yocto-qemu.config\
+menuconfig\
+/LOCALVERSION\
+1 -12-04-hw1\
+make -j4\
+cd ..\
+gdb\
+cd scratch/spring2017/12-04\
+source /scratch/opt/environment-setup-i586-poky-linux.csh\
+cp /scratch/spring2017/files/bzImage-qemux86.bin .\
+cp /scratch/spring2017/files/core-image-lsb-sdk-qemux86.ext3 .\
+\cf2 \expnd0\expndtw0\kerning0
+qemu-system-i386 -gdb tcp::5624 -S -nographic -kernel bzImage-qemux86.bin -drive file=core-image-lsb-sdk-qemux86.ext3,if=virtio -enable-kvm -net none -usb -localtime --no-reboot --append "root=/dev/vda rw console=ttyS0 debug"\
+continue\
+root\
+uname -a\
+reboot\
+qemu-system-i386 -gdb tcp::5624 -S -nographic -kernel linux-yocto-3.14/arch/x86/boot/bzImage\'a0 -drive file=core-image-lsb-sdk-qemux86.ext3,if=virtio -enable-kvm -net none -usb -localtime --no-reboot --append "root=/dev/vda rw console=ttyS0 debug"\
+continue\
+root\
+uname -a\
+reboot\
+\
+-gdb = wait for gdb connection to the device using tcp on port 5624\
+-S = does not start CPU at start up\
+-nographic = disables graphical GUI\
+-kernel = switches the image boot kernel to the bzimage listed afterwards\
+-drive = defines a new drive file\
+-enable-kvm = enables the linux kernel virtual machine support which helps with x86 configurations for linux virtualization\
+-net = sets initialization for network interface card to set up network. when set to none, not network card is initialized\
+-usb = enables usb driver\
+-localtime = initialized local time in kernel not UTC time\
+\'97no-reboot sets the reboot command to turn the kernel off instead of reboot\
+\'97append = the following command gets ientered into the kernel command line\
+\
+}
