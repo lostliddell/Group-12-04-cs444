@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <unistd.h>
 
 pthread_mutex_t buffer;
 pthread_cond_t condc,  condp;
@@ -74,20 +75,19 @@ double genrand() {
 }
 
 void* producer(void *ptr) {
-	int ptimer;
+	int ptimer = 0;
 	while(1) {
 		pthread_mutex_lock(&buffer);		
 		while(limit >= 32)
 			pthread_cond_wait(&condp, &buffer);
 		citem[limit].value = abs((unsigned int)genrand());
-		citem[limit].ctimer = (abs((unsigned int)genrand()) % 7) + 2;
-		printf("Producer produced: %d\n", citem[limit].value);
+		citem[limit].ctimer = ((abs((unsigned int)genrand()) % 7) + 2);
+		ptimer = ((abs((unsigned int)genrand()) % 4) + 3);
 		limit++;
 		entry++;
 		pthread_cond_signal(&condc);
 		pthread_mutex_unlock(&buffer);
-		ptimer = ((abs((unsigned int)genrand()) % 4) + 3);
-		wait(ptimer * 1000);
+		sleep(ptimer * 1000);
 	}
 }
 
@@ -97,16 +97,13 @@ void* consumer(void *ptr) {
 		pthread_mutex_lock(&buffer);
 		while(limit == 0)
 			pthread_cond_wait(&condc, &buffer);
-		if(citem[limit].value != 0)
-			printf("Consumer consumed: %d\n", citem[limit].value);
+		printf("Consumer consumed: %d\n", citem[limit-1].value);
 		consumetime = citem[limit].ctimer * 1000;
-		citem[limit].value = 0;
-		citem[limit].ctimer = 0;
 		limit--;
-		entry++;		
+		entry++;
 		pthread_cond_signal(&condp);
-		pthread_mutex_unlock(&buffer);			
-		wait(consumetime);
+		pthread_mutex_unlock(&buffer);
+		sleep(consumetime);
 	}
 }
 
@@ -122,7 +119,7 @@ int main () {
 	int seed = 4567;
 	sgenrand(seed);
 	genrand();
-	while(entry <= 100) {
+	while(entry <= 20) {
 			pthread_create(&cons, NULL, consumer, NULL);
 			pthread_create(&prod, NULL, producer, NULL);
 	}
@@ -131,3 +128,7 @@ int main () {
 	pthread_cond_destroy(&condc);
 	pthread_cond_destroy(&condp);
 }
+
+
+
+
