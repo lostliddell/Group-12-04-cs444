@@ -107,26 +107,39 @@ void* consumer(void *ptr) {
 	}
 }
 
-int main () {
+int main (int argc, char *argv[]) {
+	
+	if(argc == 2) {	
+		int num = atoi(argv[1]);
+		
+		pthread_t prod[num], cons[num];
+		 
+		pthread_mutex_init(&buffer, NULL);
+		pthread_cond_init(&condc, NULL);
+		pthread_cond_init(&condp, NULL);
 
-	pthread_t prod, cons;
-	 
-	pthread_mutex_init(&buffer, NULL);
-	pthread_cond_init(&condc, NULL);
-	pthread_cond_init(&condp, NULL);
+		int i = 0;
+		int seed = 4567;
+		sgenrand(seed);
+		genrand();
 
-	int i = 0;
-	int seed = 4567;
-	sgenrand(seed);
-	genrand();
-	while(entry <= 20) {
-			pthread_create(&cons, NULL, consumer, NULL);
-			pthread_create(&prod, NULL, producer, NULL);
+		for(;i < num; i++) {
+			pthread_create(&prod[i], NULL, producer, NULL);
+			pthread_create(&cons[i], NULL, consumer, NULL);
+		}
+		
+		for(;i < num; i++) {
+			pthread_join(prod[i], NULL);
+			pthread_join(cons[i], NULL);
+		}
+		
+		pthread_mutex_destroy(&buffer);
+		pthread_cond_destroy(&condc);
+		pthread_cond_destroy(&condp);
 	}
 	
-	pthread_mutex_destroy(&buffer);
-	pthread_cond_destroy(&condc);
-	pthread_cond_destroy(&condp);
+	else
+		printf("ERROR: Invalid number of inputs\n");
 }
 
 
