@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <cpuid.h>
+#include <x86intrin.h>
 
 pthread_mutex_t buffer;
 pthread_cond_t condc,  condp;
@@ -29,6 +31,19 @@ struct item {
 static unsigned long mt[N]; 
 static int mti=N+1; 
 
+_Bool supportsRDRND() {
+	const unsigned int flag_RDRAND = (1 << 30);
+	unsigned int level = 0;
+    unsigned int eax = 0;
+    unsigned int ebx;
+    unsigned int ecx;
+    unsigned int edx;
+	
+	//Determines if RDRND is supported or not, get_cpuid returns 0, RDRND is supported
+	!__get_cpuid(level, &eax, &ebx, &ecx, &edx);
+	return((ecx & flag_RDRAND) == flag_RDRAND);
+}
+
 void sgenrand(seed) unsigned long seed;	{
     int i;
 
@@ -44,7 +59,15 @@ void sgenrand(seed) unsigned long seed;	{
 double genrand() {
     unsigned long y;
     static unsigned long mag01[2]={0x0, MATRIX_A};
-
+	
+/* 	if(supportsRDRND()) {
+		unsigned int value;
+		int result;
+		result = _rdrand32_step(&value);
+		return value;
+	} */
+		
+	
     if (mti >= N) { 
         int kk;
 
@@ -108,7 +131,6 @@ void* consumer(void *ptr) {
 }
 
 int main (int argc, char *argv[]) {
-	
 	if(argc == 2) {	
 		int num = atoi(argv[1]);
 		
