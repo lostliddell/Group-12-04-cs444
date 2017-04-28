@@ -100,17 +100,17 @@ double genrand() {
 void* producer(void *ptr) {
 	int ptimer = 0;
 	while(1) {
+		sleep(ptimer * 1000);
+		ptimer = ((abs((unsigned int)genrand()) % 4) + 3);
 		pthread_mutex_lock(&buffer);		
 		while(limit >= 32)
 			pthread_cond_wait(&condp, &buffer);
 		citem[limit].value = abs((unsigned int)genrand());
 		citem[limit].ctimer = ((abs((unsigned int)genrand()) % 7) + 2);
-		ptimer = ((abs((unsigned int)genrand()) % 4) + 3);
 		limit++;
 		entry++;
 		pthread_cond_signal(&condc);
 		pthread_mutex_unlock(&buffer);
-		sleep(ptimer * 1000);
 	}
 }
 
@@ -124,9 +124,9 @@ void* consumer(void *ptr) {
 		consumetime = citem[limit].ctimer * 1000;
 		limit--;
 		entry++;
+		sleep(consumetime);
 		pthread_cond_signal(&condp);
 		pthread_mutex_unlock(&buffer);
-		sleep(consumetime);
 	}
 }
 
