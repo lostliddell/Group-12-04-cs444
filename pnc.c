@@ -100,8 +100,8 @@ double genrand() {
 void* producer(void *ptr) {
 	int ptimer = 0;
 	while(1) {
-		sleep(ptimer * 1000);
 		ptimer = ((abs((unsigned int)genrand()) % 4) + 3);
+		wait(ptimer * 1000);
 		pthread_mutex_lock(&buffer);		
 		while(limit >= 32)
 			pthread_cond_wait(&condp, &buffer);
@@ -118,13 +118,13 @@ void* consumer(void *ptr) {
 	int consumetime;
 	while(1) {
 		pthread_mutex_lock(&buffer);
-		while(limit == 0)
+		while(limit == 0 || citem[limit-1].value == 0)
 			pthread_cond_wait(&condc, &buffer);
 		printf("Consumer consumed: %d\n", citem[limit-1].value);
 		consumetime = citem[limit].ctimer * 1000;
 		limit--;
 		entry++;
-		sleep(consumetime);
+		wait(consumetime);
 		pthread_cond_signal(&condp);
 		pthread_mutex_unlock(&buffer);
 	}
