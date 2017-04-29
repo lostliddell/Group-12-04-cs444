@@ -31,6 +31,9 @@ show: $(TRG)
 
 showps: $(PSF)
 	@for i in $(PSF) ; do $(GH) $$i & done
+	
+pnc: producerconsumer.c 
+    gcc -pthread -o pnc producerconsumer.c
 
 all: pdf
 
