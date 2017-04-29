@@ -1,0 +1,145 @@
+\documentclass[letterpaper,10pt]{article}
+
+\usepackage{graphicx}                                        
+\usepackage{amssymb}                                         
+\usepackage{amsmath}                                         
+\usepackage{amsthm}                                          
+
+\usepackage{alltt}                                           
+\usepackage{float}
+\usepackage{color}
+\usepackage{url}
+
+\usepackage{balance}
+\usepackage[TABBOTCAP, tight]{subfigure}
+\usepackage{enumitem}
+\usepackage{pstricks, pst-node}
+
+\usepackage{geometry}
+\geometry{textheight=8.5in, textwidth=6in}
+
+\newcommand{\cred}[1]{{\color{red}#1}}
+\newcommand{\cblue}[1]{{\color{blue}#1}}
+
+\newcommand{\toc}{\tableofcontents}
+
+%\usepackage{hyperref}
+
+\def\name{Team 12-04}
+
+%% The following metadata will show up in the PDF properties
+% \hypersetup{
+%   colorlinks = false,
+%   urlcolor = black,
+%   pdfauthor = {\name},
+%   pdfkeywords = {cs444 ``operating systems'' files filesystem I/O},
+%   pdftitle = {CS 444 Homework 1},
+%   pdfsubject = {CS 444 Homework 1},
+%   pdfpagemode = UseNone
+% }
+
+\parindent = 0.0 in
+\parskip = 0.1 in
+
+\begin{document}
+
+\tableofcontents
+
+\section{Kernel Assignment Log}
+\begin{itemize}
+    \item $\backslash$f0$\backslash$fs24 $\backslash$cf0 ssh -l peterkoa flip.engr.oregonstate.edu
+    \item ssh os-class
+    \item cd /
+    \item cd scratch/spring2017
+    \item mkdir 12-04
+    \item cd 12-04
+    \item git clone git://git.yoctoproject.org/linux-yocto-3.14
+    \item cd linux-yocto-3.14
+    \item git checkout v3.14.26
+    \item source /scratch/opt/environment-setup-i586-poky-linux.csh
+    \item cp /scratch/spring2017/files/config-3.14.26-yocto-qemu.config
+    \item menuconfig
+    \item /LOCALVERSION
+    \item 1 -12-04-hw1
+    \item make -j4
+    \item cd ..
+    \item gdb
+    \item cd scratch/spring2017/12-04
+    \item source /scratch/opt/environment-setup-i586-poky-linux.csh
+    \item cp /scratch/spring2017/files/bzImage-qemux86.bin .
+    \item cp /scratch/spring2017/files/core-image-lsb-sdk-qemux86.ext3 .
+    \item $\backslash$cf2 $\backslash$expnd0$\backslash$expndtw0$\backslash$kerning0
+    \item qemu-system-i386 -gdb tcp::5624 -S -nographic -kernel bzImage-qemux86.bin -drive         file=core-image-lsb-sdk-qemux86.ext3,if=virtio -enable-kvm -net none -usb -localtime --no-reboot --append "root=/dev/vda rw console=ttyS0 debug"
+    \item continue
+    \item root
+    \item uname -a
+    \item reboot
+    \item qemu-system-i386 -gdb tcp::5624 -S -nographic -kernel linux-yocto-3.14/arch/x86/boot/bzImage\'a0 -drive file=core-image-lsb-sdk-qemux86.ext3,if=virtio -enable-kvm -net none -usb -localtime --no-reboot --append "root=/dev/vda rw console=ttyS0 debug"
+    \item continue
+    \item root
+    \item uname -a
+    \item reboot
+\end{itemize}
+
+\section{Qemu Flag Explanations}
+\begin{itemize}
+    \item -gdb = wait for gdb connection to the device using tcp on port 5624
+    \item -S = does not start CPU at start up
+    \item -nographic = disables graphical GUI
+    \item -kernel = switches the image boot kernel to the bzimage listed afterwards
+    \item -drive = defines a new drive file
+    \item -enable-kvm = enables the linux kernel virtual machine support which helps with x86 configurations for linux virtualization
+    \item -net = sets initialization for network interface card to set up network. when set to none, not network card is initialized
+    \item -usb = enables usb driver
+    \item -localtime = initialized local time in kernel not UTC time
+    \item $\backslash$'97no-reboot sets the reboot command to turn the kernel off instead of reboot
+    \item $\backslash$'97append = the following command gets ientered into the kernel command line
+\end{itemize}
+
+\section{Concurrency Solution}
+        In order to complete this concurrency assignment, we needed to use pthreads. Since C has a pthread library, we used this to lock and unlock the buffer using the mutex function, the pthread create function to make new threads, and pthread\_join function to join all the thread together at the end in order to make a multithreading program. 
+        
+        In addition to multithreading, this assignment had us make two types of threads that would both multithread. The first is a producer thread, which adds object to the buffer. The second is the consumer thread, which reads as well as deletes objects from the buffer as well as notify the user when the consumer used an item. Using mutex, we locked and unlocked access to the buffer between each thread so that multiple threads are not trying to access the buffer at the same time. Since the thread where also time sensitive, we used a wait function in order to tell the machines to wait before performing additional actions. Since this wait time was determined by a random number generator, we used a rand function to make this timers. 
+        
+        In the instructions, we were required to make an rdrand sensitive random function. Using inline ASM codes, we determined whether the system supported rdrand or not. If the system supported rdrand, we used rdrand to generate a random number. In the case of no rdrand support, we used the Mersenne Twister to generate a random number. Since the buffer had a hard limit on how many items could be in it, we used a global variable and struct to keep track of the buffer values. With the producer and consumer functions created, we used user inputs in order to get the number of threads that the user wanted to make. Using this, we generated the number of consumer and producer threads using a for loop on pthread\_create and pthread\_join to create and end all the threads that were operating. 
+
+\section{Concurrency Questions}
+\subsection{Question 1}
+    The main point of the assignment is to understand concurrency in its most basic form because it should be, as the assignment states, an elementary subject that we easily understand. Because processors don't individually become much faster or larger, implementing multiple threads in the future will become the primary way to increase program performance making it an extremely valuable skill for the next generation of programmers.
+
+\subsection{Question 2}
+    While approaching the problem we found that having threads that looped through the consume and produce functions was a lot easier than making individual threads and then deleting them afterwards. Also, dividing the problem into smaller problems and giving them out to the members of our group allowed us to work more efficiently while being away from each other. For example, while someone was figuring out the random number generator, others worked on the parallelization. For the design we decided to use the create thread function that also launched that thread into a funtion of our own creation to allow for individual threads of both consumer and producer type.
+
+\subsection{Question 3}
+    Lots of testing of each individual part was used with printf() statements along the way to test intermediate value inside the code for error. Before random numbers were included they were tested to see if they worked correctly and vise versa for all the other individual modules of the code. Using incremental development kept our code mostly bug free for most the programming.
+
+\subsection{Question 4}
+    In total, we learned about the variety of potential problems that parallelization can create. We had two threads trying to access the same variable at the same time and two threads trying to access the same function at the same time. Most of the conflicting issues were solved with mutexing and condition flags throughout our code.
+
+\section{Work Log}
+     The group met on Wednesday, March 12 after recitation to complete the kernel portion of the assignment. The next time we met was Monday of the next week, to start talking about solutions to the concurrency assignment and to make sure we completed the kernel assignment correctly. Our last meeting was a lengthy period spent in the library on Friday, March 21, where we worked together on the writeup and the concurrency assignment proper for several hours. 
+     
+\section{Version Control History}
+    \begin{table}[]
+    \centering
+    \caption{Github Commit History}
+    \label{my-label}
+    \begin{tabular}{ll}
+    Commit Name                                          & Updated             \\
+    Initial Commit                                       & Fri Apr 21 13:09:38 \\
+    First consumer and producer commit                   & Fri Apr 21 13:15:32 \\
+    Update pnc.c                                         & Wed Apr 26 15:10:09 \\
+    Got the pthread working, but the timer isn't working & Wed Apr 26 20:03:58 \\
+    Added command line input for number of threads       & Wed Apr 26 21:33:48 \\
+    Added rdrnd support check                            & Wed Apr 26 22:26:24 \\
+    Fixed double access                                  & Fri Apr 28 16:42:42 \\
+    Fixed Timer                                          & Fri Apr 28 16:48:07 \\
+    Added first draft of writeup and makefile.           & Fri Apr 28 17:10:17 \\
+    Writeup and makefile updated, finalized              & Fri Apr 28 18:15:45 \\
+                                                         &                     \\
+                                                         &                     \\
+                                                         &                     \\
+                                                         &                    
+    \end{tabular}
+    \end{table}
+\end{document}
