@@ -127,10 +127,10 @@ int genrand(){
 
    }else if( ifRdrand == 1 ){
 
-	 unsigned int rnd = 0;
+	 uint32_t rnd = 0;
 
 	 int result = _rdrand32_step( &rnd );
-	 smallRand = result & INT_MAX; 
+	 smallRand = rnd & INT_MAX; 
 
 	 }
 
