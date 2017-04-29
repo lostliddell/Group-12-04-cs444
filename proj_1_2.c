@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <time.h>
-
+#include <limits.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
 
 /*START OF MERSAND TWISTER CODE BLOCK*/
 /* Period parameters */  
@@ -64,28 +67,35 @@ unsigned long genrand_int32(void)
    y ^= (y << 15) & 0xefc60000UL;
    y ^= (y >> 18);
 
+
    return y;
 }
 
-/*MERSAND TWISTER CODE END*/
+int genrand(){
 
+   unsigned long randNum = genrand_int32();
+   int smallRand = randNum & INT_MAX;
+
+   return smallRand;
+
+}
+
+/*MERSAND TWISTER CODE END*/
 pthread_mutex_t buffer;
 pthread_cond_t condc,  condp;
 
 int limit = 0;
-int entry = 0;
 
 struct item{
 
-	int value;
-	int ctimer;
+   int value;
+   int time;
 
 } citem[32];
 
-
 void* producer( void *ptr ){
 
-   int ptimer = 0;
+   int pTimer = 0;
 
    while( 1 ){
 
@@ -97,35 +107,57 @@ void* producer( void *ptr ){
 
       }
 
-      citem[limit].value = abs( ( unsigned int ) genrand( ) );
-      citem[limit].ctimer = ((abs((unsigned int)genrand()) % 7) + 2);
-      ptimer = ((abs((unsigned int)genrand()) % 4) + 3);
+      citem[limit].value = genrand();
+      citem[limit].time = ( ( genrand() % 8 ) + 2 );
+      pTimer = ( ( genrand() % 5 ) + 3 );
       limit++;
-      entry++;
+      printf( "\nTotal items: %d\n", limit );
+
       pthread_cond_signal(&condc);
       pthread_mutex_unlock(&buffer);
-      sleep(ptimer * 1000);
+
+      sleep( pTimer );
+
    }
+
 }
 
-void* consumer(void *ptr) {
-   int consumetime;
-   while(1) {
+void* consumer(void *ptr){
+
+   int consumeTime;
+
+   while( 1 ){
+
       pthread_mutex_lock(&buffer);
-      while(limit == 0)
+
+      while( limit == 0 ){
+
 	 pthread_cond_wait(&condc, &buffer);
-      printf("Consumer consumed: %d\n", citem[limit-1].value);
-      consumetime = citem[limit].ctimer * 1000;
+
+      }
+
       limit--;
-      entry++;
+      printf( "\nConsumer consumed: %d\n", citem[limit].value );
+      consumeTime = citem[limit].time;
+
+      citem[limit].time = 0;
+      citem[limit].value = 0;
+
       pthread_cond_signal(&condp);
       pthread_mutex_unlock(&buffer);
-      sleep(consumetime);
+
+      sleep( consumeTime );
+
    }
+
 }
 
-int main (int argc, char *argv[]) {
-   if(argc == 2) {	
+
+
+int main( int argc, char *argv[] ){
+
+   if( argc == 2 ){ 
+
       int num = atoi(argv[1]);
 
       pthread_t prod[num], cons[num];
@@ -135,37 +167,31 @@ int main (int argc, char *argv[]) {
       pthread_cond_init(&condp, NULL);
 
       int i = 0;
-      int seed = 4567;
-      sgenrand(seed);
-      genrand();
+      unsigned long seed = time( NULL );
+      init_genrand( seed );
 
-      for(;i < num; i++) {
-	 pthread_create(&prod[i], NULL, producer, NULL);
-	 pthread_create(&cons[i], NULL, consumer, NULL);
+      for( i = 0; i < num; i++ ){
+
+	 pthread_create( &prod[i], NULL, producer, NULL );
+	 pthread_create( &cons[i], NULL, consumer, NULL );
+
       }
 
-      for(;i < num; i++) {
-	 pthread_join(prod[i], NULL);
-	 pthread_join(cons[i], NULL);
+      for( i = 0; i < num; i++ ){
+
+	 pthread_join( prod[i], NULL );
+	 pthread_join( cons[i], NULL );
+
       }
 
-      pthread_mutex_destroy(&buffer);
-      pthread_cond_destroy(&condc);
-      pthread_cond_destroy(&condp);
+      pthread_mutex_destroy( &buffer );
+      pthread_cond_destroy( &condc );
+      pthread_cond_destroy( &condp );
+
+   }else{
+
+      printf( "\nERROR: Invalid number of inputs\n" );
+
    }
-
-   else
-      printf("ERROR: Invalid number of inputs\n");
-}
-
-
-
-
-int main(){
-
-   unsigned long seed = time( NULL );
-   init_genrand( seed );
-
-   return 0;
 
 }
