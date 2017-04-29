@@ -1,9 +1,12 @@
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <immintrin.h>
+
 
 /*START OF MERSAND TWISTER CODE BLOCK*/
 /* Period parameters */  
@@ -71,16 +74,33 @@ unsigned long genrand_int32(void)
    return y;
 }
 
-int genrand(){
 
-   unsigned long randNum = genrand_int32();
-   int smallRand = randNum & INT_MAX;
+/*MERSAND TWISTER CODE END*/
 
-   return smallRand;
+_Bool asmCheck( unsigned int* eax, unsigned int* ebx, unsigned int* ecx, unsigned int* edx ){
+
+   __asm__ __volatile__("cpuid"
+	 : "=a" (*eax), "=b" (*ebx), "=c" (*ecx), "=d" (*edx)
+	 :  "a" (1), "c" (0)
+	 );
 
 }
 
-/*MERSAND TWISTER CODE END*/
+
+_Bool checkRdrand(){
+
+   unsigned int flag_Rdrand = (1 << 30);
+   unsigned int eax, ebx, ecx, edx;
+
+   asmCheck( &eax, &ebx, &ecx, &edx );
+
+   _Bool answer = ( (ecx & flag_Rdrand ) == flag_Rdrand);
+
+   return answer; 
+
+}
+
+
 pthread_mutex_t buffer;
 pthread_cond_t condc,  condp;
 
@@ -92,6 +112,33 @@ struct item{
    int time;
 
 } citem[32];
+
+
+
+int genrand(){
+
+   int ifRdrand = checkRdrand();
+   int smallRand;
+
+   if( ifRdrand == 0 ){
+
+      unsigned long randNum = genrand_int32();
+      smallRand = randNum & INT_MAX;
+
+   }else if( ifRdrand == 1 ){
+
+	 unsigned int rnd = 0;
+
+	 int result = _rdrand32_step( &rnd );
+	 smallRand = result & INT_MAX; 
+
+	 }
+
+   return smallRand;
+
+}
+
+
 
 void* producer( void *ptr ){
 
@@ -154,7 +201,10 @@ void* consumer(void *ptr){
 
 
 
+
 int main( int argc, char *argv[] ){
+
+   printf( "\nIS RDRAND: %d\n", checkRdrand() );
 
    if( argc == 2 ){ 
 
