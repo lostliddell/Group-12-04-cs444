@@ -3,21 +3,20 @@
 #include <string.h>
 #include <pthread.h>
 
+// Philosopher States
 #define THINKING  0
 #define HUNGRY  1
 #define EATING  2
 
-int limit = 0;
-
-pthread_mutex_t bowl;
+pthread_mutex_t bowl; // Main mutex
 
 struct philo_Struct {
-	pthread_cond_t condp;
+	pthread_cond_t condp; // Condition flags for each philosopher
 	int state;
-	int blocktime;
+	int blocktime; // Time philosopher is blocked
 } people[5];
 
-
+// ADD GENRAND AND INLINE ASM CHECK
 
 // Algorithm to figure out which forks are being used or not
 int abletoEat(int id) {
@@ -68,12 +67,14 @@ void put_forks(int id) {
 }
 
 void think(int id) {
+	// Using RAND() till genrand and asm support check are added
 	int thinkingtime = (rand() % 19) + 1;
 	printf("Philosopher %d is THINKING\n", id);
 	sleep(thinkingtime);
 }
 
 void eat(int id) {
+	// Using RAND() till genrand and asm support check are added
 	int eatingtime = (rand() % 7) + 2;
 	printf("Philosopher %d is EATING\n", id );
 	sleep(eatingtime);
@@ -98,6 +99,7 @@ int main( int argc, char *argv[] ) {
 	pthread_mutex_init(&bowl, NULL);
 
 	int i = 0;
+	// Need to pass (void *) into pthread_create, therefore, needed to make a pointer. Need this to pass the values correctly.
 	int id[5] = {0,1,2,3,4};
 	
 	// Initializing some of struct values
