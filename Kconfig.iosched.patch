@@ -1,0 +1,42 @@
+--- KconfigOLD.iosched	2017-05-08 21:36:25.518554529 -0700
++++ Kconfig.iosched	2017-05-08 19:48:24.054005019 -0700
+@@ -2,6 +2,12 @@
+ 
+ menu "IO Schedulers"
+ 
++config IOSCHED_CLOOK
++	tristate "CLOOK I/O scheduler"
++	default DEFAULT_CLOOP
++	---help---
++	 the clook I/O scheduler. AJP
++
+ config IOSCHED_NOOP
+ 	bool
+ 	default y
+@@ -41,7 +47,7 @@
+ 
+ choice
+ 	prompt "Default I/O scheduler"
+-	default DEFAULT_CFQ
++	default n 
+ 	help
+ 	  Select the I/O scheduler which will be used by default for all
+ 	  block devices.
+@@ -52,6 +58,9 @@
+ 	config DEFAULT_CFQ
+ 		bool "CFQ" if IOSCHED_CFQ=y
+ 
++	config DEFAULT_CLOOK
++		bool "CLOOP" if IOSCHED_CLOOK=y
++
+ 	config DEFAULT_NOOP
+ 		bool "No-op"
+ 
+@@ -59,6 +68,7 @@
+ 
+ config DEFAULT_IOSCHED
+ 	string
++	default "cloop" if DEFAULT_CLOOK
+ 	default "deadline" if DEFAULT_DEADLINE
+ 	default "cfq" if DEFAULT_CFQ
+ 	default "noop" if DEFAULT_NOOP
