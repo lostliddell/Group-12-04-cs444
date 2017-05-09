@@ -42,7 +42,9 @@ static void clook_add_request(struct request_queue *q, struct request *rq)
 
 	list_for_each( i, &nd->queue ){
 
-	   if( rq_end_sector( list_entry( i, struct request, queuelist ) ) > rq_end_sector( rq ) ){
+	   struct request iRequest = list_entry( i, struct request, queuelest ); 
+
+	   if( blk_rq_pos( iRequest ) > blk_rq_pos( rq ) ){
 	  
 	     break;
 
