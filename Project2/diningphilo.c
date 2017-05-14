@@ -4,8 +4,8 @@
 #include <pthread.h>
 #include <time.h>
 #include <limits.h>
-#include <immintrin.h>
-#include <stdint.h>
+//#include <immintrin.h>
+//#include <stdint.h>
 
 // Philosopher States
 #define THINKING  0
@@ -87,7 +87,7 @@ unsigned long genrand_int32(void)
    return y;
 }
 
-// ASM suppport check
+/* ASM suppport check
 _Bool asmCheck( unsigned int* eax, unsigned int* ebx, unsigned int* ecx, unsigned int* edx ){
 
    __asm__ __volatile__("cpuid"
@@ -108,7 +108,7 @@ _Bool checkRdrand(){
 
    return answer; 
 
-}
+} */
 
 int genrand(){
 
